@@ -1,14 +1,63 @@
 'use strict';
 
+class Points {
+  constructor(color) {
+    this.points = []
+    this.color = color
+  }
+
+  get length() {
+    return this.points.length
+  }
+
+  push(point) {
+    this.points.push(point)
+  }
+
+  draw() {
+    stroke(this.color)
+    strokeWeight(3)
+    this.points.map(p => point(p.x, -p.y))
+  }
+}
+
+class LRLeastSquares {
+  constructor(color) {
+    this.m = 1
+    this.b = 0
+    this.color = color
+  }
+
+  update(points) {
+    const xm = points.points.map(p => p.x).reduce((t, s) => t + s) / points.length
+    const ym = points.points.map(p => p.y).reduce((t, s) => t + s) / points.length
+    const num = points.points.map(p => (p.x - xm) * (p.y - ym)).reduce((t, s) => t + s)
+    const den = points.points.map(p => (p.x - xm) ** 2).reduce((t, s) => t + s)
+    this.m = num / den
+    this.b = ym - this.m * xm
+  }
+
+  draw() {
+    if (points.length < 2) return
+    stroke(this.color)
+    strokeWeight(2)
+    const x1 = -CHalfW
+    const y1 = this.m * x1 + this.b
+    const x2 = CHalfW
+    const y2 = this.m * x2 + this.b
+    line(x1, -y1, x2, -y2)
+  }
+}
+
 const CWidth = 500
 const CHeigh = 500
-let points = []
-let m = 0
-let b = 0
+const CHalfW = CWidth / 2
+const points = new Points('#f5f5f5')
+const LRLS = new LRLeastSquares('#9f0733')
 
 function setup() {
   createCenteredCanvas(CWidth, CHeigh)
-  background('#005073')
+  background('#0e0e0e')
   frameRate(60)
 }
 
@@ -21,39 +70,27 @@ function createCenteredCanvas(w, h) {
 }
 
 function draw() {
-  translate(CWidth / 2, CHeigh / 2)
-  background('#005073')
-  drawPoints()
-  if (points.length > 1)
-    drawLine()
+  translate(CHalfW, CHalfW)
+  background('#0e0e0e')
+  LRLS.draw()
+  points.draw()
+  drawBorder()
 }
 
-function drawPoints() {
-  stroke('#fff')
-  strokeWeight(3)
-  for (const p of points)
-    point(p.x, -p.y)
-}
-
-function drawLine() {
-  const x1 = -CWidth / 2
-  const y1 = m * x1 + b
-  const x2 = CWidth / 2
-  const y2 = m * x2 + b
+function drawBorder() {
+  stroke('#000')
   strokeWeight(1)
-  line(x1, -y1, x2, -y2)
-}
-
-function calcLine() {
-  const mx = points.reduce((t, s) => ({x: t.x + s.x})).x / points.length
-  const my = points.reduce((t, s) => ({y: t.y + s.y})).y / points.length
-  const num = points.map(p => (p.x - mx) * (p.y - my)).reduce((t, s) => t + s)
-  const den = points.map(p => (p.x - mx) ** 2).reduce((t, s) => t + s)
-  m = num / den
-  b = my - m * mx
+  line(-CHalfW, -CHalfW, CHalfW, -CHalfW)
+  line(-CHalfW, -CHalfW, -CHalfW, CHalfW)
+  line(CHalfW-1, CHalfW-1, CHalfW-1, -CHalfW-1)
+  line(CHalfW-1, CHalfW-1, -CHalfW-1, CHalfW-1)
 }
 
 function mouseClicked() {
-  points.push({x: mouseX - CWidth / 2, y: -(mouseY - CHeigh / 2)})
-  calcLine()
+  if (mouseX > 0 && mouseX < CWidth &&
+      mouseY > 0 && mouseY < CHeigh) {
+    points.push({x: mouseX - CHalfW, y: -(mouseY - CHalfW)})
+    LRLS.update(points)
+  }
+  console.log(mouseX, mouseY)
 }
