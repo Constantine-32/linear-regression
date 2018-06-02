@@ -48,8 +48,8 @@ const LRGD = new LinearRegression('#4fc775') // Linear Regression Gradient Desce
 
 function setup() {
   createCenteredCanvas()
-  background('#0e0e0e')
   frameRate(60)
+  draw()
 }
 
 function windowResized() {
