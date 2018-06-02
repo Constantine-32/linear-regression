@@ -1,13 +1,13 @@
 'use strict';
 
-class LRLeastSquares {
+class LinearRegression {
   constructor(color) {
-    this.m = 1
-    this.b = 0
+    this.m = 0
+    this.b = 0.5
     this.color = color
   }
 
-  update(points) {
+  updateLeastSquares(points) {
     const xm = points.map(p => p.x).reduce((t, s) => t + s) / points.length
     const ym = points.map(p => p.y).reduce((t, s) => t + s) / points.length
     const num = points.map(p => (p.x - xm) * (p.y - ym)).reduce((t, s) => t + s)
@@ -16,30 +16,7 @@ class LRLeastSquares {
     this.b = ym - this.m * xm
   }
 
-  draw() {
-    if (points.length < 2) return
-    stroke(this.color)
-    strokeWeight(2)
-    let x1 = 0
-    let y1 = this.m * x1 + this.b
-    let x2 = 1
-    let y2 = this.m * x2 + this.b
-    x1 = map(x1, 0, 1, 0, CWidth)
-    y1 = map(y1, 0, 1, CHeigh, 0)
-    x2 = map(x2, 0, 1, 0, CWidth)
-    y2 = map(y2, 0, 1, CHeigh, 0)
-    line(x1, y1, x2, y2)
-  }
-}
-
-class LRGradientDescent {
-  constructor(color) {
-    this.m = 0
-    this.b = 0.5
-    this.color = color
-  }
-
-  update(points) {
+  updateGradientDescent(points) {
     if (points.length < 2) return
     const rate = 0.05
     for (const p of points) {
@@ -60,32 +37,20 @@ class LRGradientDescent {
     let y1 = this.m * x1 + this.b
     let x2 = 1
     let y2 = this.m * x2 + this.b
-    x1 = map(x1, 0, 1, 0, CWidth)
-    y1 = map(y1, 0, 1, CHeigh, 0)
-    x2 = map(x2, 0, 1, 0, CWidth)
-    y2 = map(y2, 0, 1, CHeigh, 0)
+    x1 = map(x1, 0, 1, 0, width)
+    y1 = map(y1, 0, 1, height, 0)
+    x2 = map(x2, 0, 1, 0, width)
+    y2 = map(y2, 0, 1, height, 0)
     line(x1, y1, x2, y2)
   }
 }
 
-const CWidth = 500
-const CHeigh = 500
-const CHalfW = CWidth / 2
 const points = []
-const LRLS = new LRLeastSquares('#9f0733')
-const LRGD = new LRGradientDescent('#4fc775')
-
-points.draw = function() {
-  stroke('#f5f5f5')
-  strokeWeight(3)
-  this.map(p => point(
-    map(p.x, 0, 1, 0, CWidth),
-    map(p.y, 0, 1, CHeigh, 0)
-  ))
-}
+const LRLS = new LinearRegression('#9f0733')
+const LRGD = new LinearRegression('#4fc775')
 
 function setup() {
-  createCenteredCanvas(CWidth, CHeigh)
+  createCenteredCanvas()
   background('#0e0e0e')
   frameRate(60)
 }
@@ -94,32 +59,50 @@ function windowResized() {
   createCenteredCanvas()
 }
 
-function createCenteredCanvas(w, h) {
-  createCanvas(w, h).position((windowWidth - width) / 2, (windowHeight - height) / 2)
+function createCenteredCanvas() {
+  createCanvas(500, 500).position(
+    (windowWidth - width) / 2,
+    (windowHeight - height) / 2
+  )
 }
 
 function draw() {
+  // Clear previous canvas
   background('#0e0e0e')
+  // Linear Regression Least Squares
   LRLS.draw()
-  LRGD.update(points)
+  // Linear Regression Gradient Descent
+  LRGD.updateGradientDescent(points)
   LRGD.draw()
-  points.draw()
+  // Points, frame and legend
+  drawPoints()
   drawFrame()
 }
 
+function drawPoints() {
+  stroke('#fff')
+  strokeWeight(3)
+  points.map(p => point(
+    map(p.x, 0, 1, 0, width),
+    map(p.y, 0, 1, height, 0)
+  ))
+}
+
 function drawFrame() {
+  // Frame
   stroke('#000')
   strokeWeight(1)
-  line(0, 0, CWidth, 0)
-  line(0, 0, 0, CHeigh)
-  line(CWidth-1, CHeigh-1, CWidth-1, 0)
-  line(CWidth-1, CHeigh-1, 0, CHeigh-1)
+  line(0, 0, width, 0)
+  line(0, 0, 0, height)
+  line(width-1, height-1, width-1, 0)
+  line(width-1, height-1, 0, height-1)
+  // Legend lines
   strokeWeight(2)
   stroke(LRLS.color)
   line(390, 15, 400, 15)
   stroke(LRGD.color)
   line(390, 30, 400, 30)
-
+  // Legend text
   noStroke()
   fill('#fff')
   textAlign(LEFT, CENTER)
@@ -129,13 +112,12 @@ function drawFrame() {
 }
 
 function mouseClicked() {
-  if (mouseX > 0 && mouseX < CWidth &&
-      mouseY > 0 && mouseY < CHeigh) {
+  if (mouseX > 0 && mouseX < width &&
+      mouseY > 0 && mouseY < height) {
     points.push({
-      x: map(mouseX, 0, CWidth, 0, 1),
-      y: map(mouseY, 0, CHeigh, 1, 0)
+      x: map(mouseX, 0, width, 0, 1),
+      y: map(mouseY, 0, height, 1, 0)
     })
-    LRLS.update(points)
-    console.log(mouseX, mouseY)
+    LRLS.updateLeastSquares(points)
   }
 }
