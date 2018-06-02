@@ -8,23 +8,26 @@ class LinearRegression {
   }
 
   updateLeastSquares(points) {
-    const xm = points.map(p => p.x).reduce((t, s) => t + s) / points.length
-    const ym = points.map(p => p.y).reduce((t, s) => t + s) / points.length
-    const num = points.map(p => (p.x - xm) * (p.y - ym)).reduce((t, s) => t + s)
-    const den = points.map(p => (p.x - xm) ** 2).reduce((t, s) => t + s)
+    if (points.length < 2) return
+    const xmean = points.map(p => p.x)
+      .reduce((a, b) => a + b) / points.length
+    const ymean = points.map(p => p.y)
+      .reduce((a, b) => a + b) / points.length
+    const num = points.map(p => (p.x - xmean) * (p.y - ymean))
+      .reduce((a, b) => a + b)
+    const den = points.map(p => (p.x - xmean) ** 2)
+      .reduce((a, b) => a + b)
     this.m = num / den
-    this.b = ym - this.m * xm
+    this.b = ymean - this.m * xmean
   }
 
   updateGradientDescent(points) {
     if (points.length < 2) return
     const rate = 0.05
     for (const p of points) {
-      const x = p.x
-      const y = p.y
-      const guess = this.m * x + this.b
-      const error = y - guess
-      this.m += error * x * rate
+      const guess = this.m * p.x + this.b
+      const error = p.y - guess
+      this.m += error * p.x * rate
       this.b += error * rate
     }
   }
@@ -33,21 +36,15 @@ class LinearRegression {
     if (points.length < 2) return
     stroke(this.color)
     strokeWeight(2)
-    let x1 = 0
-    let y1 = this.m * x1 + this.b
-    let x2 = 1
-    let y2 = this.m * x2 + this.b
-    x1 = map(x1, 0, 1, 0, width)
-    y1 = map(y1, 0, 1, height, 0)
-    x2 = map(x2, 0, 1, 0, width)
-    y2 = map(y2, 0, 1, height, 0)
-    line(x1, y1, x2, y2)
+    const y1 = map((this.m * 0 + this.b), 0, 1, height, 0)
+    const y2 = map((this.m * 1 + this.b), 0, 1, height, 0)
+    line(0, y1, width, y2)
   }
 }
 
 const points = []
-const LRLS = new LinearRegression('#9f0733')
-const LRGD = new LinearRegression('#4fc775')
+const LRLS = new LinearRegression('#9f0733') // Linear Regression Least Squares
+const LRGD = new LinearRegression('#4fc775') // Linear Regression Gradient Descent
 
 function setup() {
   createCenteredCanvas()
@@ -67,14 +64,10 @@ function createCenteredCanvas() {
 }
 
 function draw() {
-  // Clear previous canvas
   background('#0e0e0e')
-  // Linear Regression Least Squares
   LRLS.draw()
-  // Linear Regression Gradient Descent
   LRGD.updateGradientDescent(points)
   LRGD.draw()
-  // Points, frame and legend
   drawPoints()
   drawFrame()
 }
