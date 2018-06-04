@@ -158,7 +158,7 @@ function drawFrame() {
   textSize(10)
   text('Least Squares', 410, 15)
   text('Gradient Descent', 410, 30) 
-  text('GD TensorFlow', 410, 45) 
+  text('GD TensorFlow.js', 410, 45) 
 }
 
 function mouseClicked() {
