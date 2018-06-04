@@ -7,8 +7,24 @@ class LinearRegression {
     this.color = color
   }
 
-  updateLeastSquares(points) {
-    if (points.length < 2) return
+  draw() {
+    if (points.length < 2) return this
+    stroke(this.color)
+    strokeWeight(2)
+    const y1 = map((this.m * 0 + this.b), 0, 1, height, 0)
+    const y2 = map((this.m * 1 + this.b), 0, 1, height, 0)
+    line(0, y1, width, y2)
+    return this
+  }
+}
+
+class LeastSquares extends LinearRegression {
+  constructor(color) {
+    super(color)
+  }
+
+  update(points) {
+    if (points.length < 2) return this
     const xmean = points.map(p => p.x)
       .reduce((a, b) => a + b) / points.length
     const ymean = points.map(p => p.y)
@@ -19,32 +35,70 @@ class LinearRegression {
       .reduce((a, b) => a + b)
     this.m = num / den
     this.b = ymean - this.m * xmean
+    return this
+  }
+}
+
+class GradientDescent extends LinearRegression {
+  constructor(color) {
+    super(color)
   }
 
-  updateGradientDescent(points) {
-    if (points.length < 2) return
-    const rate = 0.05
+  update(points) {
+    if (points.length < 2) return this
+    const rate = 0.2
     for (const p of points) {
       const guess = this.m * p.x + this.b
       const error = p.y - guess
       this.m += error * p.x * rate
       this.b += error * rate
     }
+    return this
+  }
+}
+
+class GDTensorFLow {
+  constructor(color) {
+    this.m = tf.variable(tf.scalar(0))
+    this.b = tf.variable(tf.scalar(0.5))
+    this.f = xs => tf.tensor1d(xs).mul(this.m).add(this.b)
+    this.loss = (pred, labels) => pred.sub(labels).square().mean()
+    this.optimizer = tf.train.sgd(0.2)
+    this.color = color
+  }
+
+  update(points) {
+    if (points.length < 2) return this
+    tf.tidy(() => 
+      this.optimizer.minimize(() =>
+        this.loss(
+          this.f(points.map(p => p.x)),
+          tf.tensor1d(points.map(p => p.y))
+        )
+      )
+    )
+    return this
   }
 
   draw() {
-    if (points.length < 2) return
+    if (points.length < 2) return this
     stroke(this.color)
     strokeWeight(2)
-    const y1 = map((this.m * 0 + this.b), 0, 1, height, 0)
-    const y2 = map((this.m * 1 + this.b), 0, 1, height, 0)
+    const ys = tf.tidy(() => this.f([0, 1]).dataSync())
+    const y1 = map(ys[0], 0, 1, height, 0)
+    const y2 = map(ys[1], 0, 1, height, 0)
     line(0, y1, width, y2)
+    return this
   }
 }
 
 const points = []
-const LRLS = new LinearRegression('#9f0733') // Linear Regression Least Squares
-const LRGD = new LinearRegression('#4fc775') // Linear Regression Gradient Descent
+// Linear Regression Least Squares
+const LRLS = new LeastSquares('#c0392b')
+// Linear Regression Gradient Descent
+const LRGD = new GradientDescent('#27ae60')
+// Linear Regression Gradient Descent TensorFlow
+const LRTS = new GDTensorFLow('#2980b9')
 
 function setup() {
   createCenteredCanvas()
@@ -66,8 +120,8 @@ function createCenteredCanvas() {
 function draw() {
   background('#0e0e0e')
   LRLS.draw()
-  LRGD.updateGradientDescent(points)
-  LRGD.draw()
+  LRGD.update(points).draw()
+  LRTS.update(points).draw()
   drawPoints()
   drawFrame()
 }
@@ -95,6 +149,8 @@ function drawFrame() {
   line(390, 15, 400, 15)
   stroke(LRGD.color)
   line(390, 30, 400, 30)
+  stroke(LRTS.color)
+  line(390, 45, 400, 45)
   // Legend text
   noStroke()
   fill('#fff')
@@ -102,6 +158,7 @@ function drawFrame() {
   textSize(10)
   text('Least Squares', 410, 15)
   text('Gradient Descent', 410, 30) 
+  text('GD TensorFlow', 410, 45) 
 }
 
 function mouseClicked() {
@@ -111,6 +168,6 @@ function mouseClicked() {
       x: map(mouseX, 0, width, 0, 1),
       y: map(mouseY, 0, height, 1, 0)
     })
-    LRLS.updateLeastSquares(points)
+    LRLS.update(points)
   }
 }
