@@ -111,7 +111,11 @@ function windowResized() {
 }
 
 function createCenteredCanvas() {
-  createCanvas(500, 500).position(
+  const size =
+    (windowWidth <= 540 || windowHeight <= 630) +
+    (windowWidth <= 960 || windowHeight <= 800)
+  const dim = [600, 450, 300][size]
+  createCanvas(dim, dim).position(
     (windowWidth - width) / 2,
     (windowHeight - height) / 2
   )
@@ -146,19 +150,19 @@ function drawFrame() {
   // Legend lines
   strokeWeight(2)
   stroke(LRLS.color)
-  line(390, 15, 400, 15)
+  line(width-110, 15, width-100, 15)
   stroke(LRGD.color)
-  line(390, 30, 400, 30)
+  line(width-110, 30, width-100, 30)
   stroke(LRTS.color)
-  line(390, 45, 400, 45)
+  line(width-110, 45, width-100, 45)
   // Legend text
   noStroke()
   fill('#fff')
   textAlign(LEFT, CENTER)
   textSize(10)
-  text('Least Squares', 410, 15)
-  text('Gradient Descent', 410, 30) 
-  text('GD TensorFlow.js', 410, 45) 
+  text('Least Squares', width-90, 15)
+  text('Gradient Descent', width-90, 30) 
+  text('GD TensorFlow.js', width-90, 45) 
 }
 
 function mouseClicked() {
