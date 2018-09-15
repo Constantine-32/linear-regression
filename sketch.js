@@ -108,6 +108,7 @@ function setup() {
 
 function windowResized() {
   createCenteredCanvas()
+  draw()
 }
 
 function createCenteredCanvas() {
